@@ -261,10 +261,11 @@ if __name__ == '__main__':
             if prevChrom != chrom:
                 prevChrom, prevPos = chrom, int(pos)
             else:
-                if prevPos > chrom:
+                if prevPos > int(pos):  # i think there was an error...we wanto to compare prevPos with pos
+                #if prevPos > int(chrom):
                     actionItem(logger)
                     # print >> logger, "At line [ %d ], genomic position %s:%s is before previous position %s:%s " (lineNo + 1, chrom, pos, prevChrom, prevPos)
-                    print("At line [ %d ], genomic position %s:%s is before previous position %s:%s " (lineNo + 1, chrom, pos, prevChrom, prevPos), file=logger)
+                    print("At line [ %d ], genomic position %s:%s is before previous position %s:%s " %  (lineNo + 1, chrom, pos, prevChrom, prevPos), file=logger)
                     continue
             
 
