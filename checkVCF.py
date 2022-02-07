@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import sys, os
+import os
+import sys
 import logging
 
 VERSION = "version 1.4 (20140115)"
@@ -27,12 +28,16 @@ def myopen(fn):
         return open(fn)
     
 def checkGTformat(gt):
-    if gt == '.': return True
+    if gt == '.': 
+        return True
     genos = gt.replace('|','/').split('/')
-    if len(genos) != 1 and len(genos) != 2: return False
+    if len(genos) != 1 and len(genos) != 2: 
+        return False
     for g in genos:
-        if g == '.': continue
-        if g.isdigit(): continue
+        if g == '.': 
+            continue
+        if g.isdigit(): 
+            continue
         return False
     return True
 
@@ -40,8 +45,8 @@ def checkGTformat(gt):
 def getGeno(gt):
     if gt.find('.') >= 0:
         return -1
-    genos = gt.replace('|','/').split('/')
-    return sum ( [int(g) for g in genos])
+    genos = gt.replace('|', '/').split('/')
+    return sum([int(g) for g in genos])
 
 # .fai format
 # contig, size, location, basesPerLine, bytesPerLine
@@ -62,7 +67,9 @@ class GenomeSequence:
     def open(self, fn):
         # read index
         if not os.path.exists(fn + '.fai'):
-            print >> sys.stderr, "Cannot .fai index file for %s, consider create index using 'samtools faidx %s'" % (fn, fn)
+            # print >> sys.stderr, "Cannot .fai index file for %s, consider create index using 'samtools faidx %s'" % (fn, fn)
+            print("Cannot .fai index file for {}, consider create index using 'samtools faidx {}'".format(fn, fn), file=sys.stderr)
+
             return False
         self.fn = fn
         try:
@@ -97,12 +104,13 @@ class GenomeSequence:
         if self.fileHandle:
             self.fileHandle.close()
 
-def actionItem(logger = sys.stderr):
-    print >> logger, "---------------     ACTION ITEM     ---------------"    
+def actionItem(logger=sys.stderr):
+    print("---------------     ACTION ITEM     ---------------", file=logger)
+    # print >> logger, "---------------     ACTION ITEM     ---------------"    
 
 def usage():
     print("Usage: ")
-    print("%s -r ref.fa -o preifx input.vcf: check VCF for strand" % sys.argv[0] )
+    print("{} -r ref.fa -o preifx input.vcf: check VCF for strand".format(sys.argv[0]))
 
 class Logger:
     def __init__(self, fn):
@@ -118,14 +126,18 @@ class Logger:
         console.setFormatter(formatter)
         logging.getLogger('').addHandler(console)
     def write(self, msg):
-        if msg == '\n': return
+        if msg == '\n': 
+            return
         logging.info(msg)
 
-def banner(logger = sys.stderr):
-    print >> logger, "checkVCF.py -- check validity of VCF file for meta-analysis"
-    print >> logger, VERSION
-    print >> logger, "contact zhanxw@umich.edu or dajiang@umich.edu for problems."
-    
+def banner(logger=sys.stderr):
+    # print >> logger, "checkVCF.py -- check validity of VCF file for meta-analysis"
+    print("checkVCF.py -- check validity of VCF file for meta-analysis", file=logger)
+    # print >> logger, VERSION
+    print(VERSION, file=logger)
+    # print >> logger, "contact zhanxw@umich.edu or dajiang@umich.edu for problems."
+    print("contact zhanxw@umich.edu or dajiang@umich.edu for problems.", file=logger)
+
 if __name__ == '__main__':
     try:
         import getopt
@@ -136,7 +148,8 @@ if __name__ == '__main__':
         if len(args) == 1:
             vcfFile = args[0]
         else:
-            print >> sys.stderr, "Please provide one VCF at a time"
+            print("Please provide one VCF at a time", file=sys.stderr)
+            # print >> sys.stderr, "Please provide one VCF at a time"
             sys.exit(1)
     except:
         usage()
@@ -151,7 +164,8 @@ if __name__ == '__main__':
     # from XiaoweiLib import GenomeSequence
     gs = GenomeSequence()
     if not gs.open(refFile):
-        print >> sys.stderr, "Cannot open reference genome, exiting..."
+        print("Cannot open reference genome, exiting...", file=sys.stderr)
+        # print >> sys.stderr, "Cannot open reference genome, exiting..."
         sys.exit(1)
 
     logger = Logger(outPrefix + '.check.log')
@@ -179,13 +193,16 @@ if __name__ == '__main__':
     vcfSiteLine = 0
     vcfSample = 0
     chrWarningGiven = False
-    print >> logger, "Python version is [ %s ] " % '.'.join(map(str, sys.version_info)).strip()
-    print >> logger, "Begin checking vcfFile [ %s ]" % vcfFile
+    # print >> logger, "Python version is [ %s ] " % '.'.join(map(str, sys.version_info)).strip()
+    print("Python version is [ {} ] ".format('.'.join(map(str, sys.version_info)).strip()))
+    print("Begin checking vcfFile [ %s ]" % vcfFile, file=logger)
+    # print >> logger, "Begin checking vcfFile [ %s ]" % vcfFile
     try:
         prevChrom, prevPos = None, None
         for lineNo, ln in enumerate(myopen(vcfFile)):
             if lineNo % 10000 == 0 and lineNo != 0:
-                print >> logger, "[ %d ] lines processed \r" % lineNo,
+                print("[ %d ] lines processed \r" % lineNo, file=logger)
+                # print >> logger, "[ %d ] lines processed \r" % lineNo,
             if not ln or ln.startswith('##'):
                 vcfHeaderLine += 1
                 continue
@@ -196,7 +213,8 @@ if __name__ == '__main__':
                 # check duplicated sample ids
                 if len(set(fd[9:])) != len(fd[9:]):
                     actionItem(logger)
-                    print >> logger, "Your VCF file have duplicated sample IDs, please fix them and re-run checkVCF.py"
+                    print("Your VCF file have duplicated sample IDs, please fix them and re-run checkVCF.py", file=logger)
+                    # print >> logger, "Your VCF file have duplicated sample IDs, please fix them and re-run checkVCF.py"
                     sys.exit(1)
                 vcfSample = len(fd) - 9
                 # XX
@@ -211,9 +229,12 @@ if __name__ == '__main__':
             vcfSiteLine += 1
             fd = ln.strip().split()
             if len(fd) != nField:
-                print >> logger, "Line [ %d ] does not have correct column number, exiting!" % (lineNo + 1)
-                print >> logger, "Current line has %d columns." % (len(fd))
-                print >> logger, "First 50 characters in the current line content [ %s ]. " % (ln.strip()[:50])
+                # print >> logger, "Line [ %d ] does not have correct column number, exiting!" % (lineNo + 1)
+                # print >> logger, "Current line has %d columns." % (len(fd))
+                # print >> logger, "First 50 characters in the current line content [ %s ]. " % (ln.strip()[:50])
+                print("Line [ %d ] does not have correct column number, exiting!" % (lineNo + 1), file=logger)
+                print("Current line has %d columns." % (len(fd)), file=logger)
+                print("First 50 characters in the current line content [ %s ]. " % (ln.strip()[:50]), file=logger)
                 sys.exit(1)
 
             chrom, pos, rsId, ref, alt, qual, filt, info, format = fd[:9]
@@ -228,7 +249,8 @@ if __name__ == '__main__':
 
             site = '%s:%s' % (chrom, pos)
             if site in snpSite:
-                print >> logger, "Duplicated site [ %s ]" % site
+                # print >> logger, "Duplicated site [ %s ]" % site
+                print("Duplicated site [ %s ]" % site, file=logger)
                 fDup.write('DuplicatedSite\t%s:%s\n' % (chrom, pos))
                 nDupSite += 1
                 continue
@@ -241,7 +263,8 @@ if __name__ == '__main__':
             else:
                 if prevPos > chrom:
                     actionItem(logger)
-                    print >> logger, "At line [ %d ], genomic position %s:%s is before previous position %s:%s " (lineNo + 1, chrom, pos, prevChrom, prevPos)
+                    # print >> logger, "At line [ %d ], genomic position %s:%s is before previous position %s:%s " (lineNo + 1, chrom, pos, prevChrom, prevPos)
+                    print("At line [ %d ], genomic position %s:%s is before previous position %s:%s " (lineNo + 1, chrom, pos, prevChrom, prevPos), file=logger)
                     continue
             
 
@@ -260,7 +283,8 @@ if __name__ == '__main__':
             try:
                 gtIndex = [idx for idx, i in enumerate(format.split(':')) if i == 'GT'][0]
             except:
-                print >> logger, "Line [ %d ] does not have GT defined in the FORMAT field"
+                print("Line [ %d ] does not have GT defined in the FORMAT field", file=logger)
+                # print >> logger, "Line [ %d ] does not have GT defined in the FORMAT field"
                 continue
 
             # check genotype
@@ -294,36 +318,59 @@ if __name__ == '__main__':
     except SystemExit:
         sys.exit(1)
     except KeyboardInterrupt:
-        print >> logger, "VCF checking has been stopped at line [ %d ]" % (lineNo + 1)
-        print >> logger, " [ %s ... ] " % ln[:50]
+        # print >> logger, "VCF checking has been stopped at line [ %d ]" % (lineNo + 1)
+        # print >> logger, " [ %s ... ] " % ln[:50]
+        print("VCF checking has been stopped at line [ %d ]" % (lineNo + 1), file=logger)
+        print(" [ %s ... ] " % ln[:50], file=logger)
         sys.exit(1)
     except IOError:
-        print >> logger, "IOError happened..."
+        # print >> logger, "IOError happened..."
+        print("IOError happened...", file=logger)
         raise
         sys.exit(1)
     except Exception as e:
-        print >> logger, "VCF checking failed at line [ %d ]" % (lineNo + 1)
-        print >> logger, " [ %s ... ] " % ln[:50]
-        print >> logger, "Python exceptions occurred [ %s ]!" % e
-        print >> logger, "Please report the above to zhanxw@gmail.com"
+            # print >> logger, "VCF checking failed at line [ %d ]" % (lineNo + 1)
+            # print >> logger, " [ %s ... ] " % ln[:50]
+            # print >> logger, "Python exceptions occurred [ %s ]!" % e
+            # print >> logger, "Please report the above to zhanxw@gmail.com"
+        print("VCF checking failed at line [ %d ]" % (lineNo + 1), file=logger)
+        print(" [ %s ... ] " % ln[:50], file=logger)
+        print("Python exceptions occurred [ %s ]!" % e, file=logger)
+        print("Please report the above to zhanxw@gmail.com", file=logger)    
+
         raise
         sys.exit(1)
 
     if chrWarningGiven:
-        print >> logger, "---------------     WARNING     ---------------"
-        print >> logger, "Detected that chromosome names have 'chr' prefix..."
-        print >> logger, "Please consider using the following command to clean your VCF file and then re-run checkVCF.py"
-        print >> logger, '(grep ^"#" $your_old_vcf; grep -v ^"#" $your_old_vcf | sed \'s:^chr::ig\' | sort -k1,1n -k2,2n) | bgzip -c > $your_vcf_file '
+        # print >> logger, "---------------     WARNING     ---------------"
+        # print >> logger, "Detected that chromosome names have 'chr' prefix..."
+        # print >> logger, "Please consider using the following command to clean your VCF file and then re-run checkVCF.py"
+        # print >> logger, '(grep ^"#" $your_old_vcf; grep -v ^"#" $your_old_vcf | sed \'s:^chr::ig\' | sort -k1,1n -k2,2n) | bgzip -c > $your_vcf_file '
+        print("---------------     WARNING     ---------------", file=logger)
+        print("Detected that chromosome names have 'chr' prefix...", file=logger)
+        print("Please consider using the following command to clean your VCF file and then re-run checkVCF.py", file=logger)
+        print('(grep ^"#" $your_old_vcf; grep -v ^"#" $your_old_vcf | sed \'s:^chr::ig\' | sort -k1,1n -k2,2n) | bgzip -c > $your_vcf_file ', file=logger)
         
-    print >> logger, "---------------     REPORT     ---------------"
-    print >> logger, "Total [ %d ] lines processed" % (lineNo + 1)
-    print >> logger, "Examine [ %d ] VCF header lines, [ %d ] variant sites, [ %d ] samples" % (vcfHeaderLine, vcfSiteLine, vcfSample)
-    print >> logger, "[ %d ] duplicated sites" % (nDupSite)
-    print >> logger, "[ %d ] NonSNP site are outputted to [ %s ]" % (nNonSnp, outPrefix + '.check.nonSnp')
-    print >> logger, "[ %d ] Inconsistent reference sites are outputted to [ %s ]" % (nRef, outPrefix + '.check.ref')
-    print >> logger, "[ %d ] Variant sites with invalid genotypes are outputted to [ %s ]" % (nGeno, outPrefix + '.check.geno')
-    print >> logger, "[ %d ] Alternative allele frequency > 0.5 sites are outputted to [ %s ]" % (nAF, outPrefix + '.check.af')
-    print >> logger, "[ %d ] Monomorphic sites are outputted to [ %s ]" % (nMono, outPrefix + '.check.mono')
+
+    # print >> logger, "---------------     REPORT     ---------------"
+    # print >> logger, "Total [ %d ] lines processed" % (lineNo + 1)
+    # print >> logger, "Examine [ %d ] VCF header lines, [ %d ] variant sites, [ %d ] samples" % (vcfHeaderLine, vcfSiteLine, vcfSample)
+    # print >> logger, "[ %d ] duplicated sites" % (nDupSite)
+    # print >> logger, "[ %d ] NonSNP site are outputted to [ %s ]" % (nNonSnp, outPrefix + '.check.nonSnp')
+    # print >> logger, "[ %d ] Inconsistent reference sites are outputted to [ %s ]" % (nRef, outPrefix + '.check.ref')
+    # print >> logger, "[ %d ] Variant sites with invalid genotypes are outputted to [ %s ]" % (nGeno, outPrefix + '.check.geno')
+    # print >> logger, "[ %d ] Alternative allele frequency > 0.5 sites are outputted to [ %s ]" % (nAF, outPrefix + '.check.af')
+    # print >> logger, "[ %d ] Monomorphic sites are outputted to [ %s ]" % (nMono, outPrefix + '.check.mono')
+
+    print("---------------     REPORT     ---------------", file=logger)
+    print("Total [ %d ] lines processed" % (lineNo + 1), file=logger)
+    print("Examine [ %d ] VCF header lines, [ %d ] variant sites, [ %d ] samples" % (vcfHeaderLine, vcfSiteLine, vcfSample), file=logger)
+    print("[ %d ] duplicated sites" % (nDupSite), file=logger)
+    print("[ %d ] NonSNP site are outputted to [ %s ]" % (nNonSnp, outPrefix + '.check.nonSnp'), file=logger)
+    print("[ %d ] Inconsistent reference sites are outputted to [ %s ]" % (nRef, outPrefix + '.check.ref'), file=logger)
+    print("[ %d ] Variant sites with invalid genotypes are outputted to [ %s ]" % (nGeno, outPrefix + '.check.geno'), file=logger)
+    print("[ %d ] Alternative allele frequency > 0.5 sites are outputted to [ %s ]" % (nAF, outPrefix + '.check.af'), file=logger)
+    print("[ %d ] Monomorphic sites are outputted to [ %s ]" % (nMono, outPrefix + '.check.mono'), file=logger)
 
     fDup.close()
     fRef.close()
@@ -335,12 +382,17 @@ if __name__ == '__main__':
     actionItem(logger)
     if nDupSite > 0 or nRef > 0 or nGeno > 0:
         if nDupSite > 0:
-            print >> logger, "* Remove duplicated sites and rerun checkVCF.py"
+            # print >> logger, "* Remove duplicated sites and rerun checkVCF.py"
+            print("* Remove duplicated sites and rerun checkVCF.py", file=logger)
         if nRef > 0:
-            print >> logger, "* Read %s.check.ref, for autosomal sites, make sure the you are using the forward strand" % outPrefix
+            # print >> logger, "* Read %s.check.ref, for autosomal sites, make sure the you are using the forward strand" % outPrefix
+            print("* Read %s.check.ref, for autosomal sites, make sure the you are using the forward strand" % outPrefix, file=logger)
         if nGeno > 0:
-            print >> logger, "* Open %s.check.geno, using line number there to examine the original VCF files; make sure genotypes are correct." % outPrefix
+            # print >> logger, "* Open %s.check.geno, using line number there to examine the original VCF files; make sure genotypes are correct." % outPrefix
+            print("* Open %s.check.geno, using line number there to examine the original VCF files; make sure genotypes are correct." % outPrefix, file=logger)
     else:
-        print >> logger, "* No error found by checkVCF.py, thank you for cleanning VCF file."
-    print >> logger, "* Upload these files to the ftp server (so we can double check): %s.check.log %s.check.dup %s.check.noSnp %s.check.ref %s.check.geno %s.check.af %s.check.mono" % ( (outPrefix,)*7)
+        # print >> logger, "* No error found by checkVCF.py, thank you for cleanning VCF file."
+        print("* No error found by checkVCF.py, thank you for cleanning VCF file.", file=logger)
     
+    # print >> logger, "* Upload these files to the ftp server (so we can double check): %s.check.log %s.check.dup %s.check.noSnp %s.check.ref %s.check.geno %s.check.af %s.check.mono" % ( (outPrefix,)*7)
+    print("* Upload these files to the ftp server (so we can double check): %s.check.log %s.check.dup %s.check.noSnp %s.check.ref %s.check.geno %s.check.af %s.check.mono" % ( (outPrefix,)*7), file=logger)
